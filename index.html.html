@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>九九乘法小學堂</title>
+<style>
+:root{box-sizing:border-box;color-scheme:light dark;
+--bg:#fff6e0;--ink:#2a2140;--panel:#ffffff;--line:#e5d3a6;--accent:#ff7a3d;--ok:#1f9d6b;--bad:#d9534f;--okbg:#d9f5e8;--badbg:#fde3df;
+padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1730;--ink:#f6f1ff;--panel:#2a2347;--line:#473c78;--okbg:#17402f;--badbg:#4a2326}}
+:root[data-theme="dark"]{--bg:#1b1730;--ink:#f6f1ff;--panel:#2a2347;--line:#473c78;--okbg:#17402f;--badbg:#4a2326}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;font-size:20px;line-height:1.6;min-height:100vh}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:30px;line-height:1.25;margin:6px 0}
+h2{font-size:24px;margin:6px 0}
+p{margin:4px 0 12px}
+button{font:inherit;color:inherit;cursor:pointer}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.tile{background:var(--panel);border:4px solid hsl(var(--h) 70% 55%);border-radius:18px;padding:10px;min-height:96px;text-align:center}
+.tile b{display:block;font-size:34px;color:hsl(var(--h) 65% 45%)}
+@media (prefers-color-scheme:dark){.tile b{color:hsl(var(--h) 80% 72%)}}
+.tile small{font-size:15px;opacity:.85}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.btn{background:var(--accent);color:#1d1204;border:0;border-radius:14px;padding:10px 22px;font-weight:800;font-size:20px;min-height:52px}
+.btn.g{background:transparent;color:var(--ink);border:3px solid var(--line)}
+.btn.big{width:100%;margin:6px 0;text-align:left;display:flex;justify-content:space-between;align-items:center}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.panel{background:var(--panel);border:3px solid var(--line);border-radius:18px;padding:14px;text-align:center;margin:10px 0}
+.eq{font-size:44px;font-weight:800;color:hsl(var(--h) 65% 45%)}
+@media (prefers-color-scheme:dark){.eq{color:hsl(var(--h) 80% 72%)}}
+.chant{font-size:30px;font-weight:800;letter-spacing:4px}
+.dots{display:flex;flex-direction:column;gap:6px;align-items:center;margin:10px 0}
+.dr{display:flex;gap:5px;padding:3px 8px;border-radius:999px}
+.dr:nth-child(odd){background:hsl(var(--h) 80% 90%)}
+.dr:nth-child(even){background:hsl(var(--h) 80% 82%)}
+@media (prefers-color-scheme:dark){.dr:nth-child(odd){background:hsl(var(--h) 35% 26%)}.dr:nth-child(even){background:hsl(var(--h) 35% 34%)}}
+.d{width:var(--d);height:var(--d);border-radius:50%;background:hsl(var(--h) 75% 48%)}
+.skip{font-size:22px;word-spacing:6px}
+.skip b{color:var(--accent)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin:12px 0}
+.opt{background:var(--panel);border:4px solid var(--line);border-radius:16px;font-size:34px;font-weight:800;min-height:72px}
+.opt.bad{background:var(--badbg);border-color:var(--bad);opacity:.7}
+.opt.ok{background:var(--okbg);border-color:var(--ok)}
+.fb{min-height:64px;border-radius:14px;padding:8px 12px;font-weight:700;text-align:center}
+.fb.ok{background:var(--okbg)}.fb.bad{background:var(--badbg)}
+.bar{height:14px;background:var(--line);border-radius:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.stars{font-size:48px;letter-spacing:6px;text-align:center;color:#f0a500}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chips span{background:var(--panel);border:2px solid var(--line);border-radius:10px;padding:2px 10px;font-size:18px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+const $=s=>document.querySelector(s);
+const MEM={};
+const ld=n=>{try{const v=JSON.parse(localStorage.getItem('ttl'+n));if(v)MEM[n]=v}catch(e){}return MEM[n]||{p:0,c:0}};
+const sv=(n,o)=>{MEM[n]=o;try{localStorage.setItem('ttl'+n,JSON.stringify(o))}catch(e){}};
+const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const D='零一二三四五六七八九';
+const zh=p=>p<10?D[p]:p==10?'一十':p<20?'十'+D[p-10]:D[p/10|0]+'十'+(p%10?D[p%10]:'');
+function chant(n,k){return D[n]+D[k]+zh(n*k)}
+const hue=n=>({2:350,3:25,4:45,5:140,6:175,7:210,8:260,9:300}[n]||200);
+const multiples=(n,k)=>Array.from({length:k},(_,i)=>n*(i+1));
+const say=t=>{try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='zh-TW';u.rate=.75;speechSynthesis.speak(u)}catch(e){}};
+const praise=['答對了!','好棒!','太厲害了!','沒錯!','你記住了!'];
+function dots(n,k){const d=Math.max(14,Math.min(32,Math.floor(300/n)-5));
+ return `<div class="dots" style="--d:${d}px" aria-label="${k} 排,每排 ${n} 個">${Array.from({length:k},()=>`<div class="dr">${'<i class="d"></i>'.repeat(n)}</div>`).join('')}</div>`;}
+const star=s=>'★'.repeat(s)+'☆'.repeat(3-s);
+
+function menu(){try{speechSynthesis.cancel()}catch(e){}
+ $('#app').style.setProperty('--h',30);document.documentElement.style.removeProperty('--h');
+ $('#app').innerHTML=`<h1>九九乘法小學堂</h1><p>從 2 的乘法開始,一段一段學。每段先看圖學,再練習,最後挑戰!</p>
+ <div class="grid">${[2,3,4,5,6,7,8,9].map(n=>{const s=ld(n);return `<button class="tile" style="--h:${hue(n)}" onclick="tbl(${n})"><b>${n} 的乘法</b><small>${s.c?star(s.c):s.p?'練習過了':'還沒學'}</small></button>`}).join('')}
+ <button class="tile" style="--h:20;grid-column:1/-1" onclick="mix()"><b>總複習</b><small>各段混在一起考考你</small></button></div>`;}
+function tbl(n){const s=ld(n);document.documentElement.style.setProperty('--h',hue(n));
+ $('#app').innerHTML=`<div class="top"><button class="btn g" onclick="menu()">回首頁</button></div>
+ <h2>${n} 的乘法</h2>
+ <p class="skip">${n} 個 ${n} 個數:${multiples(n,9).join('、')}</p>
+ <button class="btn big" onclick="learn(${n},1)"><span>① 學一學(看圖、念口訣)</span><span>${s.p||s.c?'✔':''}</span></button>
+ <button class="btn big" onclick="pic(${n})"><span>② 看圖練習</span><span>${s.p?'✔':''}</span></button>
+ <button class="btn big" onclick="chal(${n})"><span>③ 挑戰(不看圖)</span><span>${s.c?star(s.c):''}</span></button>
+ <div class="panel"><b>口訣</b><div class="chips" style="margin-top:6px">${[1,2,3,4,5,6,7,8,9].map(k=>`<span>${n}×${k}:${chant(n,k)}</span>`).join('')}</div></div>`;}
+function learn(n,k){const p=n*k,m=multiples(n,k);document.documentElement.style.setProperty('--h',hue(n));
+ $('#app').innerHTML=`<div class="top"><button class="btn g" onclick="tbl(${n})">回 ${n} 的乘法</button><span>${k} / 9</span></div>
+ <div class="bar"><i style="width:${k/9*100}%"></i></div>
+ <div class="panel"><div>${k} 排,每排 ${n} 個</div>${dots(n,k)}
+ <div class="eq">${n} × ${k} = ${p}</div>
+ <p class="skip">一排一排數:${m.map((x,i)=>i==k-1?`<b>${x}</b>`:x).join('、')}</p>
+ <div class="chant">${chant(n,k)}</div>
+ ${window.speechSynthesis?`<button class="btn g" onclick="say('${n}乘${k}等於${p}。${chant(n,k)}')">🔊 念給我聽</button>`:''}</div>
+ <div class="row">${k>1?`<button class="btn g" onclick="learn(${n},${k-1})">上一個</button>`:''}
+ ${k<9?`<button class="btn" onclick="learn(${n},${k+1})">下一個</button>`:`<button class="btn" onclick="pic(${n})">去練習</button>`}</div>`;}
+
+let Q;
+function opts(n,k){const p=n*k,c=new Set();
+ for(const x of sh([p+n,p-n,p+1,p-1,p+2,p-2,p+10,p-10,n*(k+2)]))if(x>0&&x!=p&&c.size<(Q.pic?2:3))c.add(x);
+ return sh([p,...c]);}
+function pic(n){Q={t:n,pic:1,qs:[1,2,3,4,5,6,7,8,9].map(k=>[n,k]),i:0,done:0,wrong:0,total:9};ask();}
+function chal(n){Q={t:n,pic:0,qs:sh([1,2,3,4,5,6,7,8,9].map(k=>[n,k])),i:0,done:0,wrong:0,total:9};ask();}
+function mix(){const q=[];for(let a=2;a<=9;a++)for(let b=1;b<=9;b++)q.push([a,b]);
+ Q={t:0,pic:0,qs:sh(q).slice(0,12),i:0,done:0,wrong:0,total:12};ask();}
+function ask(){if(Q.i>=Q.qs.length)return fin();
+ const [n,k]=Q.qs[Q.i];Q.lock=0;document.documentElement.style.setProperty('--h',Q.t?hue(Q.t):20);
+ $('#app').innerHTML=`<div class="top"><button class="btn g" onclick="${Q.t?`tbl(${Q.t})`:'menu()'}">離開</button><span>${Q.done} / ${Q.total}</span></div>
+ <div class="bar"><i style="width:${Q.done/Q.total*100}%"></i></div>
+ <div class="panel">${Q.pic?dots(n,k):''}<div class="eq">${n} × ${k} = ?</div></div>
+ <div class="opts">${opts(n,k).map(v=>`<button class="opt" onclick="pick(this,${v})">${v}</button>`).join('')}</div>
+ <div class="fb" id="fb" role="status">${Q.pic?'數數看有幾個,再選答案':'想一想,選出答案'}</div>`;}
+function pick(b,v){if(Q.lock)return;const [n,k]=Q.qs[Q.i],p=n*k,fb=$('#fb');
+ if(v==p){Q.lock=1;b.classList.add('ok');Q.done++;
+  fb.className='fb ok';fb.textContent=praise[Math.random()*5|0]+`${n} × ${k} = ${p},${chant(n,k)}`;
+  Q.i++;setTimeout(ask,1300);
+ }else{Q.wrong++;b.classList.add('bad');b.disabled=true;fb.className='fb bad';
+  if(Q.pic){fb.textContent=`再數一次:${multiples(n,k).join('、')}。哪個才是 ${k} 排的總數?`}
+  else{Q.lock=1;fb.textContent=`答案是 ${p}。口訣:${chant(n,k)}。等一下再考你一次!`;
+   document.querySelectorAll('.opt').forEach(o=>{if(+o.textContent==p)o.classList.add('ok')});
+   Q.qs.push([n,k]);Q.total=Q.total;Q.i++;setTimeout(ask,2600);}}}
+function fin(){const s=Q.wrong==0?3:Q.wrong<=2?2:1;
+ if(Q.t){const o=ld(Q.t);if(Q.pic)o.p=1;else o.c=Math.max(o.c,s);sv(Q.t,o);}
+ $('#app').innerHTML=`<h1 style="text-align:center">${Q.pic?'練習完成!':'挑戰完成!'}</h1>
+ <div class="panel">${Q.pic?'<div class="stars">👏</div><p>接下來,試試不看圖的挑戰吧!</p>':`<div class="stars" aria-label="${s} 顆星">${star(s)}</div><p>答錯 ${Q.wrong} 次。${s==3?'一題都沒錯,全部記住了!':'錯過的題目多念幾遍口訣,再挑戰一次會更好!'}</p>`}</div>
+ <div class="row">${Q.t?(Q.pic?`<button class="btn" onclick="chal(${Q.t})">去挑戰</button>`:`<button class="btn" onclick="chal(${Q.t})">再挑戰一次</button>`)
+  :'<button class="btn" onclick="mix()">再考一次</button>'}
+ ${Q.t&&!Q.pic&&Q.t<9?`<button class="btn g" onclick="tbl(${Q.t+1})">學 ${Q.t+1} 的乘法</button>`:''}
+ <button class="btn g" onclick="${Q.t?`tbl(${Q.t})`:'menu()'}">${Q.t?`回 ${Q.t} 的乘法`:'回首頁'}</button></div>`;}
+menu();
+</script>
+</body>
+</html>
